@@ -17,7 +17,6 @@ extern crate rustc_trait_selection;
 extern crate rustc_type_ir;
 
 use std::process::ExitCode;
-use std::sync::atomic::{AtomicPtr, Ordering};
 
 use rustc_driver::Callbacks;
 use rustc_interface::interface::Config;
