@@ -100,14 +100,7 @@ fn is_jstraceable<'tcx>(cx: &LateContext<'tcx>, ty: ty::Ty<'tcx>) -> bool {
         return implements_trait(cx, ty, trait_id, &[]);
     }
     // when running tests
-    if let Some(trait_id) = get_trait_def_id(
-        cx,
-        &[
-            "script_plugins_tests",
-            "trace_in_no_trace_lint",
-            "JSTraceable",
-        ],
-    ) {
+    if let Some(trait_id) = get_trait_def_id(cx, &["JSTraceable"]) {
         return implements_trait(cx, ty, trait_id, &[]);
     }
     panic!("JSTraceable not found");
