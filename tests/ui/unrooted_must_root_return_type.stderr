@@ -4,7 +4,7 @@ error: Type must be rooted
 4 | fn foo2() -> Foo {
   |              ^^^
   |
-  = note: `#[deny(unrooted_must_root)]` on by default
+  = note: `#[deny(crown::unrooted_must_root)]` on by default
 
 error: aborting due to previous error
 

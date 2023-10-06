@@ -10,23 +10,24 @@ use rustc_error_messages::MultiSpan;
 use rustc_hir::{self as hir};
 use rustc_lint::{LateContext, LateLintPass, LintContext, LintPass, LintStore};
 use rustc_middle::ty;
-use rustc_session::declare_lint;
+use rustc_session::declare_tool_lint;
 use rustc_span::symbol::Symbol;
 
 use crate::common::{get_local_trait_def_id, get_trait_def_id, implements_trait};
 use crate::symbols;
 
-declare_lint!(
-    TRACE_IN_NO_TRACE,
+declare_tool_lint! {
+    pub crown::TRACE_IN_NO_TRACE,
     Deny,
     "Warn and report incorrect usage of Traceable (jsmanaged) objects in must_not_have_traceable marked wrappers"
-);
+}
 
-declare_lint!(
-    EMPTY_TRACE_IN_NO_TRACE,
+declare_tool_lint! {
+    pub crown::EMPTY_TRACE_IN_NO_TRACE,
     Warn,
     "Warn about usage of empty Traceable objects in must_not_have_traceable marked wrappers"
-);
+}
+
 const EMPTY_TRACE_IN_NO_TRACE_MSG: &str =
     "must_not_have_traceable marked wrapper is not needed for types that implements \
 empty Traceable (like primitive types). Consider removing the wrapper.";

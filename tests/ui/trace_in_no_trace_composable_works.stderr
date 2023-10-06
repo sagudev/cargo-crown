@@ -4,7 +4,7 @@ error: must_not_have_traceable marked wrapper must not have jsmanaged inside on 
 17 | struct Foo(NoTraceComposable<NotTraceableStruct, TraceableStruct>);
    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
-   = note: `#[deny(trace_in_no_trace)]` on by default
+   = note: `#[deny(crown::trace_in_no_trace)]` on by default
 
 error: aborting due to previous error
 

@@ -6,7 +6,7 @@ use rustc_ast::ast::{AttrKind, Attribute};
 use rustc_hir::{self as hir, intravisit as visit, ExprKind};
 use rustc_lint::{LateContext, LateLintPass, LintContext, LintPass, LintStore};
 use rustc_middle::ty;
-use rustc_session::declare_lint;
+use rustc_session::declare_tool_lint;
 use rustc_span::def_id::LocalDefId;
 use rustc_span::source_map;
 use rustc_span::symbol::{sym, Symbol};
@@ -14,11 +14,11 @@ use rustc_span::symbol::{sym, Symbol};
 use crate::common::{in_derive_expn, match_def_path};
 use crate::symbols;
 
-declare_lint!(
-    UNROOTED_MUST_ROOT,
+declare_tool_lint! {
+    pub crown::UNROOTED_MUST_ROOT,
     Deny,
     "Warn and report usage of unrooted jsmanaged objects"
-);
+}
 
 pub fn register(lint_store: &mut LintStore) {
     let symbols = Symbols::new();
