@@ -13,7 +13,7 @@ use rustc_middle::ty;
 use rustc_session::declare_lint;
 use rustc_span::symbol::Symbol;
 
-use crate::common::{get_trait_def_id, implements_trait};
+use crate::common::{get_local_trait_def_id, get_trait_def_id, implements_trait};
 use crate::symbols;
 
 declare_lint!(
@@ -67,9 +67,10 @@ fn get_must_not_have_traceable(sym: &Symbols, attrs: &[Attribute]) -> Option<usi
             matches!(
                 &attr.kind,
                 AttrKind::Normal(normal)
-                if normal.item.path.segments.len() == 2 &&
-                normal.item.path.segments[0].ident.name == sym.trace_in_no_trace_lint &&
-                normal.item.path.segments[1].ident.name == sym.must_not_have_traceable
+                if normal.item.path.segments.len() == 3 &&
+                normal.item.path.segments[0].ident.name == sym.crown &&
+                normal.item.path.segments[1].ident.name == sym.trace_in_no_trace_lint &&
+                normal.item.path.segments[2].ident.name == sym.must_not_have_traceable
             )
         })
         .map(|x| match &x.get_normal_item().args {
@@ -100,7 +101,7 @@ fn is_jstraceable<'tcx>(cx: &LateContext<'tcx>, ty: ty::Ty<'tcx>) -> bool {
         return implements_trait(cx, ty, trait_id, &[]);
     }
     // when running tests
-    if let Some(trait_id) = get_trait_def_id(cx, &["JSTraceable"]) {
+    if let Some(trait_id) = get_local_trait_def_id(cx, "JSTraceable") {
         return implements_trait(cx, ty, trait_id, &[]);
     }
     panic!("JSTraceable not found");
@@ -188,6 +189,7 @@ impl<'tcx> LateLintPass<'tcx> for NotracePass {
 }
 
 symbols! {
+    crown
     trace_in_no_trace_lint
     must_not_have_traceable
 }

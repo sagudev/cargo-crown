@@ -1,6 +1,10 @@
 /// Fake jstraceable
 pub trait JSTraceable {}
-impl JSTraceable for i32 {}
+
+struct TraceableStruct;
+impl JSTraceable for TraceableStruct {}
+
+struct NotTraceableStruct;
 
 // second generic argument must not be traceable
 #[crown::trace_in_no_trace_lint::must_not_have_traceable(1)]
@@ -10,6 +14,6 @@ struct NoTraceComposable<Traceable, NoTraceable> {
 }
 
 // this is not ok i32 is traceable
-struct Foo(NoTraceComposable<u32, i32>);
+struct Foo(NoTraceComposable<NotTraceableStruct, TraceableStruct>);
 
 fn main() {}

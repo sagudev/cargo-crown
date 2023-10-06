@@ -234,6 +234,45 @@ pub fn def_path_res(cx: &LateContext<'_>, path: &[&str]) -> Vec<Res> {
     resolutions
 }
 
+pub fn def_local_res(cx: &LateContext<'_>, path: &str) -> Vec<Res> {
+    let tcx = cx.tcx;
+
+    /*let (base, mut path) = match *path {
+        [primitive] => {
+            return vec![PrimTy::from_name(Symbol::intern(primitive)).map_or(Res::Err, Res::PrimTy)];
+        }
+        [base, ref path @ ..] => (base, path),
+        _ => return Vec::new(),
+    };*/
+
+    let local_crate = LOCAL_CRATE.as_def_id();
+
+    let starts = Res::Def(tcx.def_kind(local_crate), local_crate);
+
+    let mut resolutions: Vec<Res> = vec![starts];
+
+    let segment = Symbol::intern(path);
+
+    resolutions = resolutions
+        .into_iter()
+        .filter_map(|res| res.opt_def_id())
+        .flat_map(|def_id| {
+            // When the current def_id is e.g. `struct S`, check the impl items in
+            // `impl S { ... }`
+            let inherent_impl_children = tcx
+                .inherent_impls(def_id)
+                .iter()
+                .flat_map(|&impl_def_id| item_children_by_name(tcx, impl_def_id, segment));
+
+            let direct_children = item_children_by_name(tcx, def_id, segment);
+
+            inherent_impl_children.chain(direct_children)
+        })
+        .collect();
+
+    resolutions
+}
+
 /// Resolves a def path like `std::vec::Vec` to its [`DefId`]s, see [`def_path_res`].
 pub fn def_path_def_ids(cx: &LateContext<'_>, path: &[&str]) -> impl Iterator<Item = DefId> {
     def_path_res(cx, path)
@@ -243,6 +282,15 @@ pub fn def_path_def_ids(cx: &LateContext<'_>, path: &[&str]) -> impl Iterator<It
 
 pub fn get_trait_def_id(cx: &LateContext<'_>, path: &[&str]) -> Option<DefId> {
     def_path_res(cx, path)
+        .into_iter()
+        .find_map(|res| match res {
+            Res::Def(DefKind::Trait | DefKind::TraitAlias, trait_id) => Some(trait_id),
+            _ => None,
+        })
+}
+
+pub fn get_local_trait_def_id(cx: &LateContext<'_>, path: &str) -> Option<DefId> {
+    def_local_res(cx, path)
         .into_iter()
         .find_map(|res| match res {
             Res::Def(DefKind::Trait | DefKind::TraitAlias, trait_id) => Some(trait_id),
