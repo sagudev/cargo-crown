@@ -1,5 +1,4 @@
 use rustc_ast::Mutability;
-use rustc_driver::plugin::Registry;
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
 use rustc_hir::{ImplItemRef, ItemKind, Node, OwnerId, PrimTy, TraitItemRef};

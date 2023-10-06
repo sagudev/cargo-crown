@@ -1,12 +1,10 @@
-error: this function is recursive but preemption count expectation is not 0..
-  --> $DIR/recursion.rs:16:1
-   |
-16 | fn recursive_might_sleep_unannotated() {
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   |
-   = note: expectation is inferred to be 0
-   = help: try annotate the function with `#[klint::preempt_count(expect = 0)]`
+error: Type must be rooted
+ --> $DIR/unrooted_must_root_return_type.rs:4:14
+  |
+4 | fn foo2() -> Foo {
+  |              ^^^
+  |
+  = note: `#[deny(unrooted_must_root)]` on by default
 
-WARN klint::ctxt no klint metadata found for crate alloc
-WARN klint::ctxt no klint metadata found for crate core
 error: aborting due to previous error
+
