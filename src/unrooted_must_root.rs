@@ -81,7 +81,7 @@ fn is_unrooted_ty<'tcx>(
             _ => {
                 walker.skip_current_subtree();
                 continue;
-            }
+            },
         };
         let recur_into_subtree = match t.kind() {
             ty::Adt(did, substs) => {
@@ -104,22 +104,22 @@ fn is_unrooted_ty<'tcx>(
                     } else {
                         true
                     }
-                } else if match_def_path(cx, did.did(), &[sym::core, sym.cell, sym.Ref])
-                    || match_def_path(cx, did.did(), &[sym::core, sym.cell, sym.RefMut])
-                    || match_def_path(cx, did.did(), &[sym::core, sym::slice, sym::iter, sym.Iter])
-                    || match_def_path(
+                } else if match_def_path(cx, did.did(), &[sym::core, sym.cell, sym.Ref]) ||
+                    match_def_path(cx, did.did(), &[sym::core, sym.cell, sym.RefMut]) ||
+                    match_def_path(cx, did.did(), &[sym::core, sym::slice, sym::iter, sym.Iter]) ||
+                    match_def_path(
                         cx,
                         did.did(),
                         &[sym::core, sym::slice, sym::iter, sym.IterMut],
-                    )
-                    || match_def_path(cx, did.did(), &[sym.accountable_refcell, sym.Ref])
-                    || match_def_path(cx, did.did(), &[sym.accountable_refcell, sym.RefMut])
-                    || match_def_path(
+                    ) ||
+                    match_def_path(cx, did.did(), &[sym.accountable_refcell, sym.Ref]) ||
+                    match_def_path(cx, did.did(), &[sym.accountable_refcell, sym.RefMut]) ||
+                    match_def_path(
                         cx,
                         did.did(),
                         &[sym::std, sym.collections, sym.hash, sym.map, sym.Entry],
-                    )
-                    || match_def_path(
+                    ) ||
+                    match_def_path(
                         cx,
                         did.did(),
                         &[
@@ -129,8 +129,8 @@ fn is_unrooted_ty<'tcx>(
                             sym.map,
                             sym.OccupiedEntry,
                         ],
-                    )
-                    || match_def_path(
+                    ) ||
+                    match_def_path(
                         cx,
                         did.did(),
                         &[
@@ -140,13 +140,13 @@ fn is_unrooted_ty<'tcx>(
                             sym.map,
                             sym.VacantEntry,
                         ],
-                    )
-                    || match_def_path(
+                    ) ||
+                    match_def_path(
                         cx,
                         did.did(),
                         &[sym::std, sym.collections, sym.hash, sym.map, sym.Iter],
-                    )
-                    || match_def_path(
+                    ) ||
+                    match_def_path(
                         cx,
                         did.did(),
                         &[sym::std, sym.collections, sym.hash, sym.set, sym.Iter],
@@ -160,7 +160,7 @@ fn is_unrooted_ty<'tcx>(
                 } else {
                     true
                 }
-            }
+            },
             ty::Ref(..) => false,    // don't recurse down &ptrs
             ty::RawPtr(..) => false, // don't recurse down *ptrs
             ty::FnDef(..) | ty::FnPtr(_) => false,
@@ -191,7 +191,7 @@ impl<'tcx> LateLintPass<'tcx> for UnrootedPass {
         if let hir::ItemKind::Struct(def, ..) = &item.kind {
             for ref field in def.fields() {
                 let field_type = cx.tcx.type_of(field.def_id);
-                if is_unrooted_ty(&self.symbols, cx, field_type, false) {
+                if is_unrooted_ty(&self.symbols, cx, field_type.0, false) {
                     cx.lint(
                         UNROOTED_MUST_ROOT,
                         "Type must be rooted, use #[crown::unrooted_must_root_lint::must_root] \
@@ -214,7 +214,7 @@ impl<'tcx> LateLintPass<'tcx> for UnrootedPass {
                 hir::VariantData::Tuple(fields, ..) => {
                     for field in fields {
                         let field_type = cx.tcx.type_of(field.def_id);
-                        if is_unrooted_ty(&self.symbols, cx, field_type, false) {
+                        if is_unrooted_ty(&self.symbols, cx, field_type.0, false) {
                             cx.lint(
                                 UNROOTED_MUST_ROOT,
                                 "Type must be rooted, \
@@ -224,7 +224,7 @@ impl<'tcx> LateLintPass<'tcx> for UnrootedPass {
                             )
                         }
                     }
-                }
+                },
                 _ => (), // Struct variants already caught by check_struct_def
             }
         }
@@ -242,12 +242,12 @@ impl<'tcx> LateLintPass<'tcx> for UnrootedPass {
         let in_new_function = match kind {
             visit::FnKind::ItemFn(n, _, _) | visit::FnKind::Method(n, _) => {
                 &*n.as_str() == "new" || n.as_str().starts_with("new_")
-            }
+            },
             visit::FnKind::Closure => return,
         };
 
         if !in_derive_expn(span) {
-            let sig = cx.tcx.type_of(def_id).fn_sig(cx.tcx);
+            let sig = cx.tcx.type_of(def_id).0.fn_sig(cx.tcx);
 
             for (arg, ty) in decl.inputs.iter().zip(sig.inputs().skip_binder().iter()) {
                 if is_unrooted_ty(&self.symbols, cx, *ty, false) {
@@ -257,8 +257,8 @@ impl<'tcx> LateLintPass<'tcx> for UnrootedPass {
                 }
             }
 
-            if !in_new_function
-                && is_unrooted_ty(&self.symbols, cx, sig.output().skip_binder(), false)
+            if !in_new_function &&
+                is_unrooted_ty(&self.symbols, cx, sig.output().skip_binder(), false)
             {
                 cx.lint(UNROOTED_MUST_ROOT, "Type must be rooted", |lint| {
                     lint.set_span(decl.output.span())
@@ -314,7 +314,7 @@ impl<'a, 'tcx> visit::Visitor<'tcx> for FnDefVisitor<'a, 'tcx> {
             // }
             _ => {
                 // TODO(pcwalton): Check generics with a whitelist of allowed generics.
-            }
+            },
         }
 
         visit::walk_expr(self, expr);
@@ -328,8 +328,8 @@ impl<'a, 'tcx> visit::Visitor<'tcx> for FnDefVisitor<'a, 'tcx> {
         // are implemented, the `Unannotated` case could cause false-positives.
         // These should be fixable by adding an explicit `ref`.
         match pat.kind {
-            hir::PatKind::Binding(hir::BindingAnnotation::NONE, ..)
-            | hir::PatKind::Binding(hir::BindingAnnotation::MUT, ..) => {
+            hir::PatKind::Binding(hir::BindingAnnotation::NONE, ..) |
+            hir::PatKind::Binding(hir::BindingAnnotation::MUT, ..) => {
                 let ty = cx.typeck_results().pat_ty(pat);
                 if is_unrooted_ty(self.symbols, cx, ty, self.in_new_function) {
                     cx.lint(
@@ -338,8 +338,8 @@ impl<'a, 'tcx> visit::Visitor<'tcx> for FnDefVisitor<'a, 'tcx> {
                         |lint| lint.set_span(pat.span),
                     )
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
 
         visit::walk_pat(self, pat);

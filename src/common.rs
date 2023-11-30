@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 use rustc_ast::Mutability;
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
@@ -5,7 +9,7 @@ use rustc_hir::{ImplItemRef, ItemKind, Node, OwnerId, PrimTy, TraitItemRef};
 use rustc_infer::infer::type_variable::{TypeVariableOrigin, TypeVariableOriginKind};
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_lint::LateContext;
-use rustc_middle::ty::{self, GenericArg, ParamEnv, Ty, TyCtxt, TypeVisitable};
+use rustc_middle::ty::{self, GenericArg, ParamEnv, Ty, TyCtxt, TypeVisitableExt};
 use rustc_span::source_map::{ExpnKind, MacroKind, Span};
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::DUMMY_SP;
@@ -125,7 +129,7 @@ fn local_item_children_by_name(tcx: TyCtxt<'_>, local_id: LocalDefId, name: Symb
         Some(Node::Crate(r#mod)) => {
             root_mod = ItemKind::Mod(r#mod);
             &root_mod
-        }
+        },
         Some(Node::Item(item)) => &item.kind,
         _ => return Vec::new(),
     };
@@ -189,7 +193,7 @@ pub fn def_path_res(cx: &LateContext<'_>, path: &[&str]) -> Vec<Res> {
     let (base, mut path) = match *path {
         [primitive] => {
             return vec![PrimTy::from_name(Symbol::intern(primitive)).map_or(Res::Err, Res::PrimTy)];
-        }
+        },
         [base, ref path @ ..] => (base, path),
         _ => return Vec::new(),
     };
@@ -234,23 +238,17 @@ pub fn def_path_res(cx: &LateContext<'_>, path: &[&str]) -> Vec<Res> {
     resolutions
 }
 
+/// Resolves a def path like `std::vec::Vec`, but searches only local crate
+///
+/// Also returns multiple results when there are multiple paths under the same name e.g. `std::vec`
+/// would have both a [`DefKind::Mod`] and [`DefKind::Macro`].
+///
+/// This function is less expensive than `def_path_res` and should be used sparingly.
 pub fn def_local_res(cx: &LateContext<'_>, path: &str) -> Vec<Res> {
     let tcx = cx.tcx;
-
-    /*let (base, mut path) = match *path {
-        [primitive] => {
-            return vec![PrimTy::from_name(Symbol::intern(primitive)).map_or(Res::Err, Res::PrimTy)];
-        }
-        [base, ref path @ ..] => (base, path),
-        _ => return Vec::new(),
-    };*/
-
     let local_crate = LOCAL_CRATE.as_def_id();
-
     let starts = Res::Def(tcx.def_kind(local_crate), local_crate);
-
     let mut resolutions: Vec<Res> = vec![starts];
-
     let segment = Symbol::intern(path);
 
     resolutions = resolutions
@@ -271,13 +269,6 @@ pub fn def_local_res(cx: &LateContext<'_>, path: &str) -> Vec<Res> {
         .collect();
 
     resolutions
-}
-
-/// Resolves a def path like `std::vec::Vec` to its [`DefId`]s, see [`def_path_res`].
-pub fn def_path_def_ids(cx: &LateContext<'_>, path: &[&str]) -> impl Iterator<Item = DefId> {
-    def_path_res(cx, path)
-        .into_iter()
-        .filter_map(|res| res.opt_def_id())
 }
 
 pub fn get_trait_def_id(cx: &LateContext<'_>, path: &[&str]) -> Option<DefId> {
@@ -338,8 +329,7 @@ pub fn implements_trait_with_env<'tcx>(
         kind: TypeVariableOriginKind::MiscVariable,
         span: DUMMY_SP,
     };
-    // in new nightlies: mk_substs -> mk_substs_from_iter
-    let ty_params = tcx.mk_substs(
+    let ty_params = tcx.mk_substs_from_iter(
         ty_params
             .into_iter()
             .map(|arg| arg.unwrap_or_else(|| infcx.next_ty_var(orig).into())),

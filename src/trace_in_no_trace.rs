@@ -88,11 +88,11 @@ fn get_must_not_have_traceable(sym: &Symbols, attrs: &[Attribute]) -> Option<usi
                 },
                 TokenTree::Delimited(_, _, _) => {
                     todo!("must_not_have_traceable does not support multiple notraceable positions")
-                }
+                },
             },
             _ => {
                 panic!("must_not_have_traceable does not support key-value arguments")
-            }
+            },
         })
 }
 
@@ -122,7 +122,7 @@ fn incorrect_no_trace<'tcx, I: Into<MultiSpan> + Copy>(
             _ => {
                 walker.skip_current_subtree();
                 continue;
-            }
+            },
         };
         let recur_into_subtree = match t.kind() {
             ty::Adt(did, substs) => {
@@ -150,7 +150,7 @@ jsmanaged inside on {pos}-th position. Consider removing the wrapper."
                 } else {
                     true
                 }
-            }
+            },
             _ => !t.is_primitive_ty(),
         };
         if !recur_into_subtree {
@@ -171,7 +171,7 @@ impl<'tcx> LateLintPass<'tcx> for NotracePass {
         if let hir::ItemKind::Struct(def, ..) = &item.kind {
             for ref field in def.fields() {
                 let field_type = cx.tcx.type_of(field.def_id);
-                incorrect_no_trace(&self.symbols, cx, field_type, field.span);
+                incorrect_no_trace(&self.symbols, cx, field_type.0, field.span);
             }
         }
     }
@@ -181,9 +181,9 @@ impl<'tcx> LateLintPass<'tcx> for NotracePass {
             hir::VariantData::Tuple(fields, ..) => {
                 for field in fields {
                     let field_type = cx.tcx.type_of(field.def_id);
-                    incorrect_no_trace(&self.symbols, cx, field_type, field.ty.span);
+                    incorrect_no_trace(&self.symbols, cx, field_type.0, field.ty.span);
                 }
-            }
+            },
             _ => (), // Struct variants already caught by check_struct_def
         }
     }

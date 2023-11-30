@@ -1,8 +1,11 @@
-extern crate compiletest_rs as compiletest;
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use std::env;
 use std::path::PathBuf;
 
+use compiletest_rs as compiletest;
 use once_cell::sync::Lazy;
 
 static PROFILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
@@ -12,7 +15,9 @@ static PROFILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     profile_path.into()
 });
 
-fn run_ui_tests(bless: bool) {
+#[test]
+fn compile_test() {
+    let bless = env::var("BLESS").map_or(false, |x| !x.trim().is_empty());
     let mut config = compiletest::Config {
         bless,
         edition: Some("2021".into()),
@@ -30,10 +35,4 @@ fn run_ui_tests(bless: bool) {
     config.link_deps(); // Populate config.target_rustcflags with dependencies on the path
 
     compiletest::run_tests(&config);
-}
-
-#[test]
-fn compile_test() {
-    let bless = env::var("BLESS").map_or(false, |x| !x.trim().is_empty());
-    run_ui_tests(bless);
 }
