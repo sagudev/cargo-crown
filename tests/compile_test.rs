@@ -32,7 +32,11 @@ fn compile_test() {
     config.src_base = "tests/ui".into();
     config.build_base = PROFILE_PATH.join("test/ui");
     config.rustc_path = PROFILE_PATH.join("crown");
-    config.link_deps(); // Populate config.target_rustcflags with dependencies on the path
+    config.target_rustcflags = Some(format!(
+        "-L {} -L {}",
+        PROFILE_PATH.display(),
+        PROFILE_PATH.join("deps").display()
+    ));
 
     compiletest::run_tests(&config);
 }
