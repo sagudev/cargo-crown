@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 // compile-flags: --error-format=human
-
 /// Mock `JSTraceable`
 pub trait JSTraceable {}
 
