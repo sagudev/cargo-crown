@@ -33,6 +33,8 @@ fn compile_test() {
         PROFILE_PATH.display(),
         PROFILE_PATH.join("deps").display()
     ));
+    // Does not work reliably: https://github.com/servo/servo/pull/30508#issuecomment-1834542203
+    //config.link_deps();
 
     compiletest::run_tests(&config);
 }
