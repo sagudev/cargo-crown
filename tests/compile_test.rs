@@ -15,18 +15,17 @@ static PROFILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
     profile_path.into()
 });
 
-#[test]
-fn compile_test() {
-    let bless = env::var("BLESS").map_or(false, |x| !x.trim().is_empty());
+fn run_mode(mode: &'static str, bless: bool) {
     let mut config = compiletest::Config {
         bless,
         edition: Some("2021".into()),
-        mode: compiletest::common::Mode::Ui,
         ..Default::default()
-    };
+    }
+    .tempdir();
 
-    config.src_base = "tests/ui".into();
-    config.build_base = PROFILE_PATH.join("test/ui");
+    let cfg_mode = mode.parse().expect("Invalid mode");
+    config.mode = cfg_mode;
+    config.src_base = PathBuf::from("tests").join(mode);
     config.rustc_path = PROFILE_PATH.join("crown");
     config.target_rustcflags = Some(format!(
         "-L {} -L {} -Zcrate-attr=feature(register_tool) -Zcrate-attr=register_tool(crown)",
@@ -35,6 +34,16 @@ fn compile_test() {
     ));
     // Does not work reliably: https://github.com/servo/servo/pull/30508#issuecomment-1834542203
     //config.link_deps();
+    config.clean_rmeta();
+    config.strict_headers = true;
 
     compiletest::run_tests(&config);
+}
+
+#[test]
+fn compile_test() {
+    let bless = env::var("BLESS").map_or(false, |x| !x.trim().is_empty());
+    run_mode("compile-fail", bless);
+    run_mode("run-pass", bless);
+    run_mode("ui", bless);
 }
