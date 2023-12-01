@@ -25,15 +25,11 @@ fn compile_test() {
         ..Default::default()
     };
 
-    config.target_rustcflags = Some(format!(
-        "-Zcrate-attr=feature(register_tool) -Zcrate-attr=register_tool(crown)"
-    ));
-
     config.src_base = "tests/ui".into();
     config.build_base = PROFILE_PATH.join("test/ui");
     config.rustc_path = PROFILE_PATH.join("crown");
     config.target_rustcflags = Some(format!(
-        "-L {} -L {}",
+        "-L {} -L {} -Zcrate-attr=feature(register_tool) -Zcrate-attr=register_tool(crown)",
         PROFILE_PATH.display(),
         PROFILE_PATH.join("deps").display()
     ));
